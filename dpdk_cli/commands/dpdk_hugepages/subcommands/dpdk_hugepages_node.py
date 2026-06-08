@@ -1,3 +1,5 @@
+import logging
+
 from dpdk_cli.utils.base_command import BaseCommand
 
 
@@ -14,4 +16,5 @@ class DpdkHugePagesNodeCommand(BaseCommand):
 
     @staticmethod
     def handle(args):
+        logging.debug("TODO: Implement dpdk hugepages node")
         raise NotImplementedError()

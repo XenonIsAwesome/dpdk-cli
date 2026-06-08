@@ -1,3 +1,5 @@
+import logging
+
 from dpdk_cli.utils.base_command import BaseCommand
 
 PAGE_SIZES = {
@@ -19,4 +21,5 @@ class DpdkHugePagesPageCommand(BaseCommand):
 
     @staticmethod
     def handle(args):
+        logging.debug("TODO: Implement dpdk hugepages unmount")
         raise NotImplementedError()

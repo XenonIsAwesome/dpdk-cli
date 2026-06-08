@@ -1,3 +1,5 @@
+import logging
+
 from dpdk_cli.utils.base_command import BaseCommand
 
 
@@ -9,4 +11,5 @@ class DpdkHugePagesMountCommand(BaseCommand):
 
     @staticmethod
     def handle(args):
+        logging.debug("TODO: Implement dpdk hugepages mount")
         raise NotImplementedError()

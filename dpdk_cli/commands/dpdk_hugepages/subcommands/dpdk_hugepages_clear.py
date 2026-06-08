@@ -14,4 +14,5 @@ class DpdkHugePagesClearCommand(BaseCommand):
 
     @staticmethod
     def handle(args):
+        logging.debug("TODO: Implement dpdk hugepages clear")
         raise NotImplementedError()

@@ -1,3 +1,5 @@
+import logging
+
 from dpdk_cli.utils.base_command import BaseCommand
 
 DEFAULT_PAGE_SIZE_KB = 2048
@@ -14,4 +16,5 @@ class DpdkHugePagesReserveCommand(BaseCommand):
 
     @staticmethod
     def handle(args):
+        logging.debug("TODO: Implement dpdk hugepages reserve")
         raise NotImplementedError()

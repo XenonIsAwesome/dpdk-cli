@@ -2,13 +2,7 @@ import argparse
 import logging
 import sys
 
-from dpdk_cli.commands.dpdk_bind import DpdkBindCommand
-from dpdk_cli.commands.dpdk_capture import DpdkCaptureCommand
-from dpdk_cli.commands.dpdk_hugepages import DpdkHugePagesCommand
-from dpdk_cli.commands.dpdk_install import DpdkInstallCommand
-from dpdk_cli.commands.dpdk_status import DpdkStatusCommand
-from dpdk_cli.commands.dpdk_top import DpdkTopCommand
-
+from dpdk_cli.commands import register_subparsers
 
 def main():
     parser = argparse.ArgumentParser(
@@ -17,12 +11,7 @@ def main():
     )
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
-    DpdkStatusCommand.add_subparser(subparsers)
-    DpdkBindCommand.add_subparser(subparsers)
-    DpdkTopCommand.add_subparser(subparsers)
-    DpdkCaptureCommand.add_subparser(subparsers)
-    DpdkHugePagesCommand.add_subparser(subparsers)
-    DpdkInstallCommand.add_subparser(subparsers)
+    register_subparsers(subparsers)
 
     args = parser.parse_args()
 

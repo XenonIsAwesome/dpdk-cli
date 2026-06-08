@@ -11,6 +11,6 @@ handler.setFormatter(
 )
 
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,
     handlers=[handler]
 )
