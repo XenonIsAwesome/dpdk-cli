@@ -44,6 +44,6 @@ dpdk install  # Installs all required dependencies for the package to work (dpdk
 - [ ] `dpdk hugepages reserve`
 - [ ] `dpdk hugepages setup`
 - [ ] `dpdk bind`
-- [v] `dpdk top`
+- [x] `dpdk top`
 - [ ] `dpdk capture`
 - [ ] `dpdk install`
