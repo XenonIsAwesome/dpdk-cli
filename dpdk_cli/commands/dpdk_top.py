@@ -27,7 +27,7 @@ class DpdkTopCommand(BaseCommand):
 
         if not dpdk_top_bin:
             logging.error(f"dpdk-top not found. Install from {DPDK_TOP_URL}")
-            raise SystemExit(1)
+            raise exit(1)
 
         result = run_cmd([dpdk_top_bin], capture_output=False)
         sys.exit(result.returncode if result else 1)

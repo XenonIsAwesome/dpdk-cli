@@ -1,14 +1,23 @@
 from argparse import ArgumentParser
 from pathlib import Path
 
+from dpdk_cli.consts import DPDK_DUMPCAP_EXEC_NAME
+from dpdk_cli.utils import find_exec, parse_dpdk_devbind, resolve_interfaces, run_cmd
 from dpdk_cli.utils.base_command import BaseCommand
 
 
 class DpdkCaptureCommand(BaseCommand):
     @staticmethod
     def add_subparser(subparsers):
-        parser = subparsers.add_parser("capture", help="Capture packets on an interface")
-        parser.add_argument("interfaces", help="Interface to capture packets from")
+        parser = subparsers.add_parser(
+            "capture", help="Capture packets on an interface"
+        )
+
+        parser.add_argument(
+            "interfaces",
+            nargs="+",
+            help="Interface name(s) or glob pattern(s) to capture from (e.g. eno1 eno2, eno*)",
+        )
 
         parser.add_argument(
             "-o",
@@ -31,11 +40,33 @@ class DpdkCaptureCommand(BaseCommand):
             "--autostop",
             type=str,
             default=None,
-            help="Auto-stop condition",
+            help="""duration:NUM - stop after NUM seconds;
+filesize:NUM - stop this file after NUM kB;
+packets:NUM - stop after NUM packets""",
         )
 
         parser.set_defaults(handler=DpdkCaptureCommand.handle)
 
     @staticmethod
     def handle(args):
-        raise NotImplementedError()
+        dumpcap = find_exec(DPDK_DUMPCAP_EXEC_NAME)
+        iface_to_data = resolve_interfaces(parse_dpdk_devbind(), args.interfaces)
+
+        cmd = [str(dumpcap)]
+
+        # resolved interfaces
+        for data in iface_to_data.values():
+            cmd.extend(["-i", data.pci_address])
+
+        # packet count stop condition
+        if args.count is not None:
+            cmd.extend(["-c", str(args.count)])
+
+        # autostop stop condition
+        if args.autostop is not None:
+            cmd.extend(["-a", str(args.autostop)])
+
+        # Writing to output file
+        cmd.extend(["-w", str(args.output)])
+
+        run_cmd(cmd, sudo=True, capture_output=False)

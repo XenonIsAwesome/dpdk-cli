@@ -2,8 +2,6 @@ from argparse import ArgumentParser
 
 from dpdk_cli.utils.base_command import BaseCommand
 
-REQUIRED_PACKAGES = ["dpdk"]
-
 
 class DpdkInstallCommand(BaseCommand):
     @staticmethod
@@ -16,5 +14,4 @@ class DpdkInstallCommand(BaseCommand):
 
     @staticmethod
     def handle(args):
-        # TODO: implement
         raise NotImplementedError()
