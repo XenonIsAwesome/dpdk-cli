@@ -8,7 +8,7 @@ class DpdkCaptureCommand(BaseCommand):
     @staticmethod
     def add_subparser(subparsers):
         parser = subparsers.add_parser("capture", help="Capture packets on an interface")
-        parser.add_argument("interface", help="Interface to capture packets from")
+        parser.add_argument("interfaces", help="Interface to capture packets from")
 
         parser.add_argument(
             "-o",

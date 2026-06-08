@@ -13,7 +13,7 @@ class DpdkBindCommand(BaseCommand):
     @staticmethod
     def add_subparser(subparsers):
         parser = subparsers.add_parser("bind", help="Bind interface to a DPDK driver")
-        parser.add_argument("interface", help="Network interface to bind")
+        parser.add_argument("interfaces", help="Network interface to bind")
         parser.add_argument(
             "driver",
             nargs="?",
