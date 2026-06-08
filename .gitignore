@@ -1,0 +1,4 @@
+.idea/
+.venv/
+dpdk_cli.egg-info/
+build/
