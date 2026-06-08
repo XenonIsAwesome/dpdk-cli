@@ -24,7 +24,7 @@ dpdk bind <interface> [driver] [--permanent]  # Binds <interface> to driver
                                               #   Otherwise, It will revert the 
                                               #   NIC to its original driver.
 
-dpdk top  # Opens dpdk-top (https://github.com/nkenia/dpdk-top)
+dpdk top  # Opens dpdk-top (https://github.com/njenia/dpdk-top)
 
 # Uses dpdk-dumpcap
 dpdk capture <interface> [-c <count>/-a <autostop cond>] [-o <output filepath>]  # Captures packets

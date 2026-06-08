@@ -1,1 +1,1 @@
-DPDK_TOP_URL = "https://github.com/nkenia/dpdk-top"
+DPDK_TOP_URL = "https://github.com/njenia/dpdk-top"
