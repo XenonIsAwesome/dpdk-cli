@@ -1,4 +1,5 @@
 # DPDK CLI
+
 ## Notable commands
 
 ```bash
@@ -43,7 +44,7 @@ dpdk install  # Installs all required dependencies for the package to work (dpdk
 - [ ] `dpdk hugepages page`
 - [ ] `dpdk hugepages reserve`
 - [ ] `dpdk hugepages setup`
-- [ ] `dpdk bind`
+- [x] `dpdk bind` - not tested
 - [x] `dpdk top`
-- [ ] `dpdk capture`
+- [x] `dpdk capture` - not tested
 - [ ] `dpdk install`
