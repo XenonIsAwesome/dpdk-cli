@@ -30,6 +30,8 @@ class DpdkBindCommand(BaseCommand):
 
     @staticmethod
     def handle(args):
+        # TODO: handle --permanent
+
         require_sudo()
         devbind = find_exec(DPDK_DEVBIND_EXEC_NAME)
 

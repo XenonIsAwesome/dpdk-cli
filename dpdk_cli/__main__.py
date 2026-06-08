@@ -5,6 +5,7 @@ import sys
 from dpdk_cli.commands.dpdk_bind import DpdkBindCommand
 from dpdk_cli.commands.dpdk_capture import DpdkCaptureCommand
 from dpdk_cli.commands.dpdk_hugepages import DpdkHugePagesCommand
+from dpdk_cli.commands.dpdk_install import DpdkInstallCommand
 from dpdk_cli.commands.dpdk_status import DpdkStatusCommand
 from dpdk_cli.commands.dpdk_top import DpdkTopCommand
 
@@ -21,6 +22,7 @@ def main():
     DpdkTopCommand.add_subparser(subparsers)
     DpdkCaptureCommand.add_subparser(subparsers)
     DpdkHugePagesCommand.add_subparser(subparsers)
+    DpdkInstallCommand.add_subparser(subparsers)
 
     args = parser.parse_args()
 
@@ -31,7 +33,9 @@ def main():
     try:
         args.handler(args)
     except NotImplementedError:
-        logging.critical(f"The command `dpdk {' '.join(sys.argv[1:])}` is not implemented yet...")
+        logging.critical(
+            f"The command `dpdk {' '.join(sys.argv[1:])}` is not implemented yet..."
+        )
         exit(1)
     except Exception as e:
         logging.critical(f"Exception occurred during execution of the command: {e}")

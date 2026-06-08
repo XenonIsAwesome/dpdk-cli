@@ -47,4 +47,4 @@ dpdk install  # Installs all required dependencies for the package to work (dpdk
 - [x] `dpdk bind` - not tested
 - [x] `dpdk top`
 - [x] `dpdk capture` - not tested
-- [ ] `dpdk install`
+- [x] `dpdk install` - not tested
