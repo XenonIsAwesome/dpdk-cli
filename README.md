@@ -35,11 +35,11 @@ dpdk install  # Installs all required dependencies for the package to work (dpdk
 
 - [x] `dpdk status`
 - [x] `dpdk hugepages`
-- [x] `dpdk hugepages clear` - not tested
-- [x] `dpdk hugepages mount` - not tested
-- [x] `dpdk hugepages unmount` - not tested
-- [x] `dpdk hugepages reserve` - not tested
-- [x] `dpdk hugepages setup` - not tested
+- [x] `dpdk hugepages clear`
+- [x] `dpdk hugepages mount`
+- [x] `dpdk hugepages unmount`
+- [x] `dpdk hugepages reserve`
+- [x] `dpdk hugepages setup`
 - [x] `dpdk bind`
 - [x] `dpdk top`
 - [x] `dpdk capture`
