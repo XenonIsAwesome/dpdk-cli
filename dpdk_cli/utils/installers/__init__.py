@@ -1,3 +1,4 @@
+import logging
 import platform
 from abc import ABC, abstractmethod
 from typing import List, Type
@@ -6,7 +7,7 @@ from typing import List, Type
 class Installer(ABC):
     @staticmethod
     @abstractmethod
-    def install(packages: List[str], no_confirm: bool = False):
+    def install(packages: List[str], no_confirm: bool = False, dry_run: bool = False):
         raise NotImplementedError()
 
 
@@ -26,7 +27,8 @@ def get_installer() -> Type[Installer]:
 
         return WindowsInstaller
     else:
-        raise RuntimeError(
+        logging.error(
             f"Unsupported platform: {system}. "
             f"Please install DPDK manually: https://core.dpdk.org/download/"
         )
+        exit(1)

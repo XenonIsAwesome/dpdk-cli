@@ -38,5 +38,5 @@ class DpdkInstallCommand(BaseCommand):
                 logging.info("Aborted by user")
                 return
 
-        installer_cls.install(REQUIRED_PACKAGES)
+        installer_cls.install(REQUIRED_PACKAGES, args.yes, args.dry_run)
         logging.info("Installation complete")

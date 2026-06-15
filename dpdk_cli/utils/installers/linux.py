@@ -1,8 +1,8 @@
 import logging
-import subprocess
 from pathlib import Path
 from typing import List, Dict
 
+from dpdk_cli.utils import run_cmd
 from dpdk_cli.utils.installers import Installer
 
 
@@ -14,28 +14,27 @@ class LinuxInstaller(Installer):
         if cls._detected:
             return cls._detected
 
-        data = Path("/etc/os-release").read_text().strip().lower()
+        data = Path("/etc/os-release").read_text().strip()
 
-        if "ubuntu" in data or "debian" in data:
-            cls._detected = "apt"
-        elif "fedora" in data:
-            cls._detected = "dnf"
-        elif (
-                "rhel" in data or "centos" in data or "almalinux" in data or "rocky" in data
-        ):
-            cls._detected = "dnf"
-        elif "arch" in data or "Manjaro" in data:
-            cls._detected = "pacman"
-        elif "opensuse" in data or "suse" in data:
-            cls._detected = "zypper"
-        else:
-            cls._detected = "unknown"
+        installer_to_keywords = {
+            "apt": ["ubuntu", "debian"],
+            "dnf": ["fedora", "rhel", "centos", "almalinux", "rocky"],
+            "pacman": ["arch", "manjaro"],
+            "zypper": ["suse"]
+        }
 
+        for installer, keywords in installer_to_keywords.items():
+            for keyword in keywords:
+                if keyword.lower() in data.lower():
+                    cls._detected = installer
+                    return cls._detected
+
+        cls._detected = "unknown"
         return cls._detected
 
     # noinspection PyTypeChecker
     @staticmethod
-    def install(packages: List[str], no_confirm: bool = False):
+    def install(packages: List[str], no_confirm: bool = False, dry_run: bool = False):
         pm = LinuxInstaller.detect()
         logging.info(f"Detected package manager: {pm}")
 
@@ -79,10 +78,11 @@ class LinuxInstaller(Installer):
         }
 
         if pm not in mapping:
-            raise RuntimeError(
+            logging.error(
                 f"Unsupported package manager '{pm}'. "
                 f"Please install DPDK manually: https://core.dpdk.org/download/"
             )
+            exit(1)
 
         m = mapping[pm]
 
@@ -106,4 +106,5 @@ class LinuxInstaller(Installer):
         cmd += translated
 
         logging.info(f"Running: {' '.join(cmd)}")
-        subprocess.run(cmd, check=True)
+
+        run_cmd(cmd, capture_output=False, check=True, dry_run=dry_run)

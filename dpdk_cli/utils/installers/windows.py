@@ -1,14 +1,14 @@
 import logging
-import subprocess
 import shutil
 from typing import List
 
+from dpdk_cli.utils import run_cmd
 from dpdk_cli.utils.installers import Installer
 
 
 class WindowsInstaller(Installer):
     @staticmethod
-    def install(packages: List[str], no_confirm: bool = False):
+    def install(packages: List[str], no_confirm: bool = False, dry_run: bool = False):
         winget = shutil.which("winget")
         choco = shutil.which("choco") if not winget else None
 
@@ -38,10 +38,6 @@ class WindowsInstaller(Installer):
                     "--accept-source-agreements"
                 ]
             cmd += translated
-
-            logging.info(f"Running: {' '.join(cmd)}")
-            subprocess.run(cmd, check=True)
-
         elif choco:
             logging.info("Using Chocolatey to install DPDK packages")
             mapping = {
@@ -62,12 +58,12 @@ class WindowsInstaller(Installer):
             if no_confirm:
                 cmd += ["-y"]
             cmd += list(translated)
-
-            logging.info(f"Running: {' '.join(cmd)}")
-            subprocess.run(cmd, check=True)
-
         else:
-            raise RuntimeError(
+            logging.error(
                 "No supported package manager found. "
                 "Please install DPDK manually: https://core.dpdk.org/download/"
             )
+            exit(1)
+
+        logging.info(f"Running: {' '.join(cmd)}")
+        run_cmd(cmd, capture_output=False, check=True, dry_run=dry_run)

@@ -1,22 +1,35 @@
 import fnmatch
 import logging
+import os
+import shlex
 import shutil
 import subprocess
+from argparse import ArgumentParser
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, Dict
 
 from dpdk_cli.consts import DPDK_SECTION_TO_IS_DPDK, DPDK_PCI_RE, DPDK_IF_RE, DPDK_DRV_RE, DPDK_UNUSED_RE, \
-    DPDK_DEVBIND_EXEC_NAME
+    DPDK_DEVBIND_EXEC_NAME, DPDK_HUGEPAGES_EXEC_NAME, HUGEPAGES_PAGESIZE_RE
 
 
-def run_cmd(cmd, sudo=False, capture_output=True, check=False):
+def run_cmd(cmd, sudo=False, capture_output=True, check=False, dry_run=False):
     if sudo:
-        require_sudo()
+        if not dry_run:
+            require_sudo()
+
         if isinstance(cmd, list):
             cmd = ["sudo"] + cmd
         else:
             cmd = f"sudo {cmd}"
+
+    if dry_run:
+        if isinstance(cmd, list):
+            cmd = shlex.join(cmd)
+
+        logging.debug(f"+ {cmd}")
+        return None
+
     if isinstance(cmd, str):
         result = subprocess.run(
             cmd, capture_output=capture_output, shell=True, text=True, check=check
@@ -28,36 +41,10 @@ def run_cmd(cmd, sudo=False, capture_output=True, check=False):
     return result
 
 
-def check_sudo():
-    result = run_cmd(["sudo", "-n", "true"], capture_output=False)
-    return result.returncode == 0
-
-
 def require_sudo():
-    if not check_sudo():
-        logging.error("This command requires sudo privileges")
-        raise exit(1)
-
-
-def parse_size_to_kb(size_str):
-    size_str = size_str.strip().lower()
-    if size_str.endswith("g"):
-        return int(float(size_str[:-1]) * 1024 * 1024)
-    elif size_str.endswith("m"):
-        return int(float(size_str[:-1]) * 1024)
-    elif size_str.endswith("k"):
-        return int(float(size_str[:-1]))
-    else:
-        return int(size_str)
-
-
-def format_size_kb(kb):
-    if kb >= 1024 * 1024:
-        return f"{kb / (1024 * 1024):.0f}G"
-    elif kb >= 1024:
-        return f"{kb / 1024:.0f}M"
-    else:
-        return f"{kb}K"
+    if os.geteuid() != 0:
+        logging.error("This command must be run with privileges")
+        exit(1)
 
 
 def find_exec(exec_name: str) -> Optional[Path]:
@@ -78,10 +65,10 @@ class NetworkInterfaceData:
     is_dpdk: bool
 
 
-def parse_dpdk_devbind() -> Dict[str, NetworkInterfaceData]:
+def parse_dpdk_devbind_status() -> Dict[str, NetworkInterfaceData]:
     devbind = find_exec(DPDK_DEVBIND_EXEC_NAME)
 
-    output = subprocess.run([str(devbind), "-s"], capture_output=True, text=True)
+    output = run_cmd([str(devbind), "--status-dev", "net"], capture_output=True)
     if output.returncode != 0:
         raise RuntimeError(
             f"{devbind} -s failed (rc={output.returncode}): {output.stderr.strip()}"
@@ -96,12 +83,13 @@ def parse_dpdk_devbind() -> Dict[str, NetworkInterfaceData]:
         if not current:
             return
 
-        if current.get("ifname") is None:
+        nic_id = current.get("ifname", current.get("pci", None))
+        if nic_id is None:
             # skip interfaces without Linux name
             current = None
             return
 
-        result[current["ifname"]] = NetworkInterfaceData(
+        result[nic_id] = NetworkInterfaceData(
             pci_address=current["pci"],
             description=current["desc"],
             bound_driver=current.get("drv", ""),
@@ -129,11 +117,9 @@ def parse_dpdk_devbind() -> Dict[str, NetworkInterfaceData]:
             current = {
                 "pci": m.group(1),
                 "desc": m.group(2),
-                "ifname": None,
                 "drv": "",
                 "unused": ""
             }
-            continue
 
         if current is None:
             continue
@@ -182,3 +168,90 @@ def resolve_interfaces(iface_to_data: Dict[str, NetworkInterfaceData], patterns)
                     matched[iface] = data
 
     return matched
+
+
+@dataclass
+class NumaHugePageSizes:
+    node: int
+    pages: int
+    size: int
+    size_str: str
+    total: int
+    total_str: str
+
+
+@dataclass
+class HugePageStatus:
+    numa_page_sizes: Dict[int, NumaHugePageSizes]
+    hugepages_mount: Optional[Path]
+
+
+def filesize_to_bytes_amount(pagesize: str):
+    size_to_bytes = {
+        "G": 1024 ** 3,
+        "M": 1024 ** 2,
+        "K": 1024 ** 1,
+        "b": 1,
+    }
+
+    match = HUGEPAGES_PAGESIZE_RE.match(pagesize)
+    if match:
+        groups = match.groups()
+        size_str = groups[0]
+        size_name = "b"
+        if len(groups) == 2:
+            size_name = groups[1]
+
+        if size_name not in size_to_bytes:
+            raise RuntimeError(f"Invalid size name '{size_name}' parsed from {DPDK_HUGEPAGES_EXEC_NAME}")
+
+        return int(size_str) * size_to_bytes[size_name]
+
+    raise RuntimeError(f"Invalid size {pagesize} parsed from {DPDK_HUGEPAGES_EXEC_NAME}")
+
+
+def parse_dpdk_hugepages_status():
+    hugepages = find_exec(DPDK_HUGEPAGES_EXEC_NAME)
+
+    result = run_cmd([str(hugepages), "-s"], capture_output=True)
+    if result.returncode != 0:
+        raise RuntimeError(
+            f"{hugepages} -s failed (rc={result.returncode}): {result.stderr.strip()}"
+        )
+
+    hugepages_mnt = None
+    numa_node_to_hugepages_status = {}
+
+    for line in result.stdout.splitlines():
+        components = list(filter(lambda x: x != '', line.split(' ')))
+        if len(components) < 4:
+            continue
+        node, pages, size, total = components
+        node, pages, size, total = node.strip().lower(), pages.strip().lower(), size.strip(), total.strip()
+
+        if f"{node} {pages} {size.lower()} {total.lower()}" == "node pages size total":
+            continue
+
+        if f"{node} {pages} {size.lower()}" == "hugepages mounted on":
+            hugepages_mnt = Path(total.strip())
+            continue
+
+        numa_node_to_hugepages_status[int(node)] = NumaHugePageSizes(int(node), int(pages),
+                                                                     filesize_to_bytes_amount(size),
+                                                                     size,
+                                                                     filesize_to_bytes_amount(total),
+                                                                     total)
+
+    return HugePageStatus(numa_node_to_hugepages_status, hugepages_mnt)
+
+
+def add_node_param(parser: ArgumentParser):
+    parser.add_argument(
+        "-n", "--node", type=int, required=False, help="NUMA node number"
+    )
+
+
+def add_page_param(parser: ArgumentParser):
+    parser.add_argument(
+        "-p", "--page", metavar="SIZE", required=False, help="Hugepage size (e.g., 2M, 1G)"
+    )

@@ -1,4 +1,3 @@
-import logging
 import shutil
 import sys
 
@@ -11,7 +10,7 @@ class DpdkTopCommand(BaseCommand):
     @staticmethod
     def add_subparser(subparsers):
         parser = subparsers.add_parser(
-            "top", help=f"Installs all required dependencies for the package to work"
+            "top", help=f"Real-time terminal-based monitoring for DPDK applications via telemetry ({DPDK_TOP_URL}"
         )
         parser.set_defaults(handler=DpdkTopCommand.handle)
 
@@ -26,8 +25,7 @@ class DpdkTopCommand(BaseCommand):
                 break
 
         if not dpdk_top_bin:
-            logging.error(f"dpdk-top not found. Install from {DPDK_TOP_URL}")
-            raise exit(1)
+            raise RuntimeError(f"dpdk-top not found. Install from {DPDK_TOP_URL}")
 
-        result = run_cmd([dpdk_top_bin], capture_output=False)
+        result = run_cmd([str(dpdk_top_bin)], capture_output=False, dry_run=args.dry_run)
         sys.exit(result.returncode if result else 1)

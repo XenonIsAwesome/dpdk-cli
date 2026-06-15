@@ -1,13 +1,13 @@
 import logging
-import subprocess
 from typing import List
 
+from dpdk_cli.utils import run_cmd
 from dpdk_cli.utils.installers import Installer
 
 
 class MacosInstaller(Installer):
     @staticmethod
-    def install(packages: List[str], no_confirm: bool = False):
+    def install(packages: List[str], no_confirm: bool = False, dry_run: bool = False):
         logging.info("Using Homebrew to install DPDK packages")
 
         pm_cmd = ["brew", "install"]
@@ -28,4 +28,4 @@ class MacosInstaller(Installer):
 
         cmd = pm_cmd + list(translated)
         logging.info(f"Running: {' '.join(cmd)}")
-        subprocess.run(cmd, check=True)
+        run_cmd(cmd, capture_output=False, check=True, dry_run=dry_run)

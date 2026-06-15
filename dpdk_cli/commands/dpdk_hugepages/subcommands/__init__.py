@@ -1,7 +1,7 @@
+from argparse import ArgumentParser
+
 from dpdk_cli.commands.dpdk_hugepages.subcommands.dpdk_hugepages_clear import DpdkHugePagesClearCommand
 from dpdk_cli.commands.dpdk_hugepages.subcommands.dpdk_hugepages_mount import DpdkHugePagesMountCommand
-from dpdk_cli.commands.dpdk_hugepages.subcommands.dpdk_hugepages_page import DpdkHugePagesPageCommand
-from dpdk_cli.commands.dpdk_hugepages.subcommands.dpdk_hugepages_node import DpdkHugePagesNodeCommand
 from dpdk_cli.commands.dpdk_hugepages.subcommands.dpdk_hugepages_reserve import DpdkHugePagesReserveCommand
 from dpdk_cli.commands.dpdk_hugepages.subcommands.dpdk_hugepages_setup import DpdkHugePagesSetupCommand
 from dpdk_cli.commands.dpdk_hugepages.subcommands.dpdk_hugepages_unmount import DpdkHugePagesUnmountCommand
@@ -11,8 +11,6 @@ def register_subcommands(subparsers):
     DPDK_HUGEPAGES_SUBCOMMAND_CLASSES = [
         DpdkHugePagesClearCommand,
         DpdkHugePagesMountCommand,
-        DpdkHugePagesPageCommand,
-        DpdkHugePagesNodeCommand,
         DpdkHugePagesReserveCommand,
         DpdkHugePagesSetupCommand,
         DpdkHugePagesUnmountCommand

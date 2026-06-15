@@ -1,8 +1,8 @@
-from argparse import ArgumentParser
+import logging
 from pathlib import Path
 
 from dpdk_cli.consts import DPDK_DUMPCAP_EXEC_NAME
-from dpdk_cli.utils import find_exec, parse_dpdk_devbind, resolve_interfaces, run_cmd
+from dpdk_cli.utils import find_exec, parse_dpdk_devbind_status, resolve_interfaces, run_cmd
 from dpdk_cli.utils.base_command import BaseCommand
 
 
@@ -50,12 +50,18 @@ packets:NUM - stop after NUM packets""",
     @staticmethod
     def handle(args):
         dumpcap = find_exec(DPDK_DUMPCAP_EXEC_NAME)
-        iface_to_data = resolve_interfaces(parse_dpdk_devbind(), args.interfaces)
+        iface_to_data = resolve_interfaces(parse_dpdk_devbind_status(), args.interfaces)
+        if len(iface_to_data) == 0:
+            logging.error("No matching interfaces found")
+            exit(1)
 
         cmd = [str(dumpcap)]
 
         # resolved interfaces
-        for data in iface_to_data.values():
+        for iface, data in iface_to_data.items():
+            if not data.is_dpdk:
+                logging.error(f"Port {iface} is not a DPDK interface, please bind it.")
+                exit(1)
             cmd.extend(["-i", data.pci_address])
 
         # packet count stop condition
@@ -69,4 +75,4 @@ packets:NUM - stop after NUM packets""",
         # Writing to output file
         cmd.extend(["-w", str(args.output)])
 
-        run_cmd(cmd, sudo=True, capture_output=False)
+        run_cmd(cmd, capture_output=False, dry_run=args.dry_run)

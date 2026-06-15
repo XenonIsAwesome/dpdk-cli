@@ -4,11 +4,15 @@ import sys
 
 from dpdk_cli.commands import register_subparsers
 
+
 def main():
     parser = argparse.ArgumentParser(
         prog="dpdk",
         description="DPDK CLI - Manage DPDK resources",
     )
+
+    parser.add_argument("--dry-run", action='store_true', help="Prints dangerous commands instead of executing them")
+
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
     register_subparsers(subparsers)
@@ -17,7 +21,7 @@ def main():
 
     if not args.command:
         parser.print_help()
-        sys.exit(1)
+        exit(1)
 
     try:
         args.handler(args)
